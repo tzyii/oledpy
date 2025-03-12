@@ -51,7 +51,7 @@ def fit_stretched_exp(time,EL):
         return np.exp(-(t/tau)**beta)
     popt,pcov=curve_fit(stretchedExp,time,EL,p0=[100,0.5])
     tau,beta=popt
-    fitEL = stretchedExp(time,*popt)
+    fit_EL = stretchedExp(time,*popt)
     return tau,beta,fit_EL
 
 def calc_EQE(voltage,I_OLED,I_detector,deviceArea_cm2,

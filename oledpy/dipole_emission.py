@@ -523,7 +523,7 @@ class ThinFilmArchitecture(object):
         layer_names = [x.lower() for x in self.layer_names]
         # each row is a layer, col is wavelength
         n_list = np.zeros((self.d.shape[0],self.vac_wavelengths.shape[0]),
-                         dtype=np.complex_)
+                         dtype=np.complex128)
         assert len(self.layer_names)==len(self.doping), \
             'self.doping and self.layer_names are not same length!'
         if df_nk is None:
