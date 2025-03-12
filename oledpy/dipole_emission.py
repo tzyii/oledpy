@@ -204,7 +204,7 @@ def integrate(y,x=None,axis=-1,squeeze_axis=None):
             return np.squeeze(y,axis=squeeze_axis)
 
 from oledpy.tmm import interface_t_cos, interface_r_cos, make_2x2_array
-def partial_tmm(pol,n_list,d_list,active_layer,u,lam_vac,direction='both'):
+def partial_tmm(pol,n_list,d_list,coherence,active_layer,u,lam_vac,direction='both'):
     '''
     This approach is described in J Kim Applied Optics 2018 and
     Pettersson JAP 1999.
@@ -255,8 +255,11 @@ def partial_tmm(pol,n_list,d_list,active_layer,u,lam_vac,direction='both'):
                 # Pre-factor in byrnes eqn 13
                 S_down = np.dot(I_list[j],S_down)
             if j>0:
-                # Layer matrix (phase matrix), eqn. 5 pettersson
-                L_list[j] = make_2x2_array(np.exp(-1j*delta[j]),0,
+                if coherence[j] == 0:
+                    L_list[j] = make_2x2_array(1,0,0,1,dtype=complex)
+                else:
+                    # Layer matrix (phase matrix), eqn. 5 pettersson
+                    L_list[j] = make_2x2_array(np.exp(-1j*delta[j]),0,
                                     0,np.exp(1j*delta[j]),dtype=complex)
                 # M matrix (byrnes eqn. 11)
                 M_list[j] = np.dot(L_list[j],I_list[j])
@@ -293,8 +296,11 @@ def partial_tmm(pol,n_list,d_list,active_layer,u,lam_vac,direction='both'):
                 #S_up = np.dot(L,I_list[j])
                 S_up = np.dot(S_up,I_list[j])
             if j>active_layer:
-                # Layer matrix (phase matrix), eqn. 5 pettersson
-                L_list[j] = make_2x2_array(np.exp(-1j*delta[j]),0,
+                if coherence[j] == 0:
+                    L_list[j] = make_2x2_array(1,0,0,1,dtype=complex)
+                else:
+                    # Layer matrix (phase matrix), eqn. 5 pettersson
+                    L_list[j] = make_2x2_array(np.exp(-1j*delta[j]),0,
                                     0,np.exp(1j*delta[j]),dtype=complex)
                 # M matrix (byrnes eqn. 11)
                 M_list[j] = np.dot(L_list[j],I_list[j])
@@ -328,7 +334,7 @@ class ThinFilmArchitecture(object):
             0 is horizontal, 0.33 is isotropic, and 1 is vertical
             See https://doi.org/10.1103/PhysRevApplied.8.037001 for discussion
         n_medium: index of refraction of the far-field medium (usually air)
-        coherency: list of booleans for whether each layer is coherent or not
+        coherence: list of booleans for whether each layer is coherent or not
             this is not yet implemented, so specifying this won't have any effect
         RZ is the recombination zone profile, i.e. the spatial profile of the electrically
             generated exciton density.
@@ -653,9 +659,9 @@ class ThinFilmArchitecture(object):
             # Loop through in-plane wavevectors
             for u_idx,u in enumerate(self.u):
                 TM_tmm_data = partial_tmm(
-                    'p',n_list,self.d,self.active_layer,u,lam_vac,direction)
+                    'p',n_list,self.d,self.coherence,self.active_layer,u,lam_vac,direction)
                 TE_tmm_data = partial_tmm(
-                    's',n_list,self.d,self.active_layer,u,lam_vac,direction)
+                    's',n_list,self.d,self.coherence,self.active_layer,u,lam_vac,direction)
                 # Calculate transfer matrix for bottom half of stack
                 if (direction == 'both') or (direction == 'bottom'):
                     self.r_TM_down[w_idx,u_idx] = TM_tmm_data['r_down']
